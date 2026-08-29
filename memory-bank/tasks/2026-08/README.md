@@ -57,5 +57,6 @@ See `NEXT-SESSION.md` (2026-08-10 block) for the authoritative live picture.
 ### 2026-08-28: Pi Subagent support
 
 Added Pi as a dual-scope install target using native Subagent definitions:
-`~/.pi/agent/agents/<slug>.md` globally and `.pi/agents/<slug>.md` per project.
+`~/.pi/agent/agents/<slug>.md` globally and `.pi/agents/<slug>.md` per project. The renderer
+preserves five Claude metadata fields and maps the current `tools:` vocabulary.
 See [260828_pi-subagent-support.md](./260828_pi-subagent-support.md).
