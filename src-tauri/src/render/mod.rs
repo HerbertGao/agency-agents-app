@@ -204,7 +204,11 @@ fn yaml_string(value: &str) -> String {
 fn pi_tool_mapping(value: &str) -> (Vec<&'static str>, Vec<&str>) {
     let mut mapped = Vec::new();
     let mut unmapped = Vec::new();
-    for tool in value.split(',').map(str::trim).filter(|tool| !tool.is_empty()) {
+    for tool in value
+        .split(',')
+        .map(str::trim)
+        .filter(|tool| !tool.is_empty())
+    {
         let mapped_tool = match tool {
             "Read" => Some("read"),
             "Write" => Some("write"),
@@ -234,7 +238,7 @@ fn render_pi_agent(source: &str) -> String {
             out.push('\n');
         }
     }
-    let tools = pi_field(source, "tools");
+    let tools = unquote_scalar(&pi_field(source, "tools"));
     if !tools.is_empty() {
         let (mapped, unmapped) = pi_tool_mapping(&tools);
         out.push_str("x-agency-claude-tools: ");
@@ -720,7 +724,14 @@ mod tests {
         let mut a = agent();
         a.slug = "engineering-frontend-developer".into();
         assert_eq!(render(&a, source, "pi").unwrap(), expected);
-        assert_eq!(output_slug(&a, source, "pi"), "engineering-frontend-developer");
+        let quoted = "---\nname: Scout\ndescription: Looks.\ntools: \"Read, Grep, Glob, Bash\"\n---\nLook.\n";
+        let quoted_out = render(&a, quoted, "pi").unwrap();
+        assert!(quoted_out.contains("\ntools: read, grep, find, bash\n"), "{quoted_out}");
+        assert!(quoted_out.contains("\nx-agency-claude-tools: 'Read, Grep, Glob, Bash'\n"), "{quoted_out}");
+        assert_eq!(
+            output_slug(&a, source, "pi"),
+            "engineering-frontend-developer"
+        );
     }
 
     #[test]
@@ -1043,7 +1054,10 @@ mod tests {
                 vibe: None,
                 body: String::new(),
             };
-            let expected_path = temp.path().join("pi/agents").join(format!("{source_slug}.md"));
+            let expected_path = temp
+                .path()
+                .join("pi/agents")
+                .join(format!("{source_slug}.md"));
             let expected = fs::read(&expected_path)
                 .unwrap_or_else(|e| panic!("read {}: {e}", expected_path.display()));
             let actual = render(&agent, &raw, "pi").unwrap();
