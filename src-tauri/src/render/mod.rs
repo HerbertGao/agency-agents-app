@@ -245,13 +245,12 @@ fn render_pi_agent(source: &str) -> String {
         out.push_str(&yaml_quote(&tools));
         out.push('\n');
         out.push_str("tools: ");
-        let mapped = if mapped.is_empty() {
-            "none".to_string()
+        if mapped.is_empty() {
+            out.push_str("''");
         } else {
-            mapped.join(", ")
-        };
-        out.push_str(&mapped);
-        out.push_str("\nextensions: false\n");
+            out.push_str(&mapped.join(", "));
+        }
+        out.push_str("\nextensions: ''\n");
         if !unmapped.is_empty() {
             out.push_str("x-agency-unmapped-tools: ");
             out.push_str(&yaml_quote(&unmapped.join(", ")));
@@ -720,7 +719,7 @@ mod tests {
     #[test]
     fn pi_preserves_metadata_and_maps_current_tools() {
         let source = "---\nname: Frontend Developer\ndescription: Builds Bob's UIs: safely.\n             Across lines.\ncolor: blue\nemoji: 🎨\nvibe: Ships pixels.\ntools: WebFetch, WebSearch, Read, Write, Edit\n---\nYou are a frontend dev.\n---\nKeep this separator.\n";
-        let expected = "---\nname: 'Frontend Developer'\ndescription: 'Builds Bob''s UIs: safely. Across lines.'\ncolor: 'blue'\nemoji: '🎨'\nvibe: 'Ships pixels.'\nx-agency-claude-tools: 'WebFetch, WebSearch, Read, Write, Edit'\ntools: read, write, edit\nextensions: false\nx-agency-unmapped-tools: 'WebFetch, WebSearch'\n---\nYou are a frontend dev.\n---\nKeep this separator.\n";
+        let expected = "---\nname: 'Frontend Developer'\ndescription: 'Builds Bob''s UIs: safely. Across lines.'\ncolor: 'blue'\nemoji: '🎨'\nvibe: 'Ships pixels.'\nx-agency-claude-tools: 'WebFetch, WebSearch, Read, Write, Edit'\ntools: read, write, edit\nextensions: ''\nx-agency-unmapped-tools: 'WebFetch, WebSearch'\n---\nYou are a frontend dev.\n---\nKeep this separator.\n";
         let mut a = agent();
         a.slug = "engineering-frontend-developer".into();
         assert_eq!(render(&a, source, "pi").unwrap(), expected);
@@ -728,6 +727,8 @@ mod tests {
         let quoted_out = render(&a, quoted, "pi").unwrap();
         assert!(quoted_out.contains("\ntools: read, grep, find, bash\n"), "{quoted_out}");
         assert!(quoted_out.contains("\nx-agency-claude-tools: 'Read, Grep, Glob, Bash'\n"), "{quoted_out}");
+        let unmapped_only = "---\nname: Scout\ndescription: Looks.\ntools: WebFetch\n---\nLook.\n";
+        assert!(render(&a, unmapped_only, "pi").unwrap().contains("\ntools: ''\nextensions: ''\n"));
         assert_eq!(
             output_slug(&a, source, "pi"),
             "engineering-frontend-developer"
