@@ -725,10 +725,18 @@ mod tests {
         assert_eq!(render(&a, source, "pi").unwrap(), expected);
         let quoted = "---\nname: Scout\ndescription: Looks.\ntools: \"Read, Grep, Glob, Bash\"\n---\nLook.\n";
         let quoted_out = render(&a, quoted, "pi").unwrap();
-        assert!(quoted_out.contains("\ntools: read, grep, find, bash\n"), "{quoted_out}");
-        assert!(quoted_out.contains("\nx-agency-claude-tools: 'Read, Grep, Glob, Bash'\n"), "{quoted_out}");
+        assert!(
+            quoted_out.contains("\ntools: read, grep, find, bash\n"),
+            "{quoted_out}"
+        );
+        assert!(
+            quoted_out.contains("\nx-agency-claude-tools: 'Read, Grep, Glob, Bash'\n"),
+            "{quoted_out}"
+        );
         let unmapped_only = "---\nname: Scout\ndescription: Looks.\ntools: WebFetch\n---\nLook.\n";
-        assert!(render(&a, unmapped_only, "pi").unwrap().contains("\ntools: ''\nextensions: ''\n"));
+        assert!(render(&a, unmapped_only, "pi")
+            .unwrap()
+            .contains("\ntools: ''\nextensions: ''\n"));
         assert_eq!(
             output_slug(&a, source, "pi"),
             "engineering-frontend-developer"
